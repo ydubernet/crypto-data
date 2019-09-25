@@ -73,10 +73,10 @@ namespace CryptoData.Controllers
                 return BadRequest("Binance response isn't the one expected. Please kindly notify the developer so he adapts the code.");
             }
 
-            string[] responseArray = responseMessage.Replace("[", "")
-                                                    .Replace("]", "")
-                                                    .Replace("\"", "")
-                                                    .Split(',', StringSplitOptions.RemoveEmptyEntries);
+            // TODO : Stop using Newtonsoft and use Jit instead
+            string[][] response = JsonConvert.DeserializeObject<string[][]>(responseMessage);
+            string[] responseArray = response[0];
+
             if(responseArray.Length != 12)
             {
                 return BadRequest("Binance response doesn't contain the expected number of elements. API may have changed. Please kindly notify the developer so he adapts the code.");
