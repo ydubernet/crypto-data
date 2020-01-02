@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using CryptoData.Models;
+using CryptoData.ResponsesContracts;
 
 namespace CryptoData.Services
 {
@@ -15,17 +16,17 @@ namespace CryptoData.Services
         private static readonly CultureInfo BINANCE_CULTURE_INFO = new CultureInfo("en-US");
 
 
-        public ResultProperties ComputeHistoricalPriceFromBinance(string[] binanceResponseArray, int seconds, int volatilityToleranceLimitInPercent)
+        public ResultProperties ComputeHistoricalPriceFromBinance(BinanceResponseContract binanceResponseArray, int seconds, int volatilityToleranceLimitInPercent)
         {
             decimal volTolerance = volatilityToleranceLimitInPercent / 100m;
 
             // Parsing Binance response
             // Cf. https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md
             // timestamp in ms = binanceResponseArray[0]
-            decimal opening = decimal.Parse(binanceResponseArray[1], BINANCE_CULTURE_INFO);
-            decimal high = decimal.Parse(binanceResponseArray[2], BINANCE_CULTURE_INFO);
-            decimal low = decimal.Parse(binanceResponseArray[3], BINANCE_CULTURE_INFO);
-            decimal closing = decimal.Parse(binanceResponseArray[4], BINANCE_CULTURE_INFO);
+            decimal opening = decimal.Parse(binanceResponseArray.Open, BINANCE_CULTURE_INFO);
+            decimal high = decimal.Parse(binanceResponseArray.High, BINANCE_CULTURE_INFO);
+            decimal low = decimal.Parse(binanceResponseArray.Low, BINANCE_CULTURE_INFO);
+            decimal closing = decimal.Parse(binanceResponseArray.Close, BINANCE_CULTURE_INFO);
 
             // Unfortunately, since the only precision we can have from Binance is minute scale, we do an approximation :
             // The price at the moment the event happened is supposed to be :

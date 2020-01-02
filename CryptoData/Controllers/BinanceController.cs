@@ -1,10 +1,8 @@
 ﻿using CryptoData.Payloads;
+using CryptoData.ResponsesContracts;
 using CryptoData.Services;
+using Jil;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -27,11 +25,6 @@ namespace CryptoData.Controllers
         /// </remarks>
         private const int LIMIT = 1;
 
-        /// <summary>
-        /// Arbitrary value used for avoiding taking wrong prices in the model in case of very volatil event
-        /// </summary>
-        public const decimal VOLATILITY_TOLERANCE_LIMIT = 0.2m;
-
         private readonly IBinanceComputationService _binanceComputationService;
 
         public BinanceController(IBinanceComputationService binanceComputationService)
@@ -48,7 +41,7 @@ namespace CryptoData.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("price")]
-        public async Task<IActionResult> GetCryptoCurrencyPrice([FromQuery]string symbol, [FromQuery]long timestamp, [FromQuery]int volLimit)
+        public async Task<IActionResult> GetCryptoCurrencyPrice(string symbol, long timestamp, int volLimit)
         {
             long timestampInMs;
 
@@ -68,21 +61,22 @@ namespace CryptoData.Controllers
 
             string responseMessage = await responseContent.Content.ReadAsStringAsync();
 
-            if (!responseMessage.StartsWith("["))
+            if (!responseMessage.StartsWith("[["))
             {
                 return BadRequest("Binance response isn't the one expected. Please kindly notify the developer so he adapts the code.");
             }
 
-            // TODO : Stop using Newtonsoft and use Jit instead
-            string[][] response = JsonConvert.DeserializeObject<string[][]>(responseMessage);
-            string[] responseArray = response[0];
+            object[][] response = JSON.Deserialize<object[][]>(responseMessage);
+            object[] responseArray = response[0];
 
-            if(responseArray.Length != 12)
+            if (responseArray.Length != 12)
             {
                 return BadRequest("Binance response doesn't contain the expected number of elements. API may have changed. Please kindly notify the developer so he adapts the code.");
             }
 
-            var result = _binanceComputationService.ComputeHistoricalPriceFromBinance(responseArray, seconds, volLimit);
+            var binanceResponse = responseArray.ToBinanceResponse();
+
+            var result = _binanceComputationService.ComputeHistoricalPriceFromBinance(binanceResponse, seconds, volLimit);
             return Ok(result);
         }
     }
