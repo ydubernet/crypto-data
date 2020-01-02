@@ -1,4 +1,5 @@
 ﻿using CryptoData.Payloads;
+using CryptoData.ResponsesContracts;
 using CryptoData.Services;
 using Jil;
 using Microsoft.AspNetCore.Mvc;
@@ -65,15 +66,17 @@ namespace CryptoData.Controllers
                 return BadRequest("Binance response isn't the one expected. Please kindly notify the developer so he adapts the code.");
             }
 
-            string[][] response = JSON.Deserialize<string[][]>(responseMessage); // TODO : To Finish
-            string[] responseArray = response[0];
+            object[][] response = JSON.Deserialize<object[][]>(responseMessage);
+            object[] responseArray = response[0];
 
-            if(responseArray.Length != 12)
+            if (responseArray.Length != 12)
             {
                 return BadRequest("Binance response doesn't contain the expected number of elements. API may have changed. Please kindly notify the developer so he adapts the code.");
             }
 
-            var result = _binanceComputationService.ComputeHistoricalPriceFromBinance(responseArray, seconds, volLimit);
+            var binanceResponse = responseArray.ToBinanceResponse();
+
+            var result = _binanceComputationService.ComputeHistoricalPriceFromBinance(binanceResponse, seconds, volLimit);
             return Ok(result);
         }
     }
